@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM php:7.2-fpm-buster
 
 LABEL maintainer="diego@passbolt.com"
 
@@ -34,7 +34,7 @@ RUN apt-get update \
          gnupg \
          libgpgme11 \
          libmcrypt4 \
-         mysql-client \
+         mariadb-client \
          supervisor \
          cron \
     && mkdir /home/www-data \
@@ -59,6 +59,7 @@ RUN apt-get update \
        fi \
     && php composer-setup.php \
     && mv composer.phar /usr/local/bin/composer \
+    && composer self-update --1 \
     && curl -sSL $PASSBOLT_URL | tar zxf - -C . --strip-components 1 \
     && composer install -n --no-dev --optimize-autoloader \
     && chown -R www-data:www-data . \
@@ -78,6 +79,8 @@ RUN apt-get update \
 COPY conf/passbolt.conf /etc/nginx/conf.d/default.conf
 COPY conf/supervisor/*.conf /etc/supervisor/conf.d/
 COPY bin/docker-entrypoint.sh /docker-entrypoint.sh
+COPY conf/app.default.php /var/www/passbolt/config
+RUN rm /var/www/passbolt/config/app.php
 
 EXPOSE 80 443
 
